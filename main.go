@@ -93,6 +93,7 @@ func init() {
 	mw = io.MultiWriter(os.Stdout, file)
 	log.SetOutput(mw)
 	log.Println("This is a log message")
+	//this is a commit test
 
 }
 
