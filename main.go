@@ -3,9 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/signal"
+	"time"
 
 	"TMv1/Monitor"
 	"github.com/playwright-community/playwright-go"
@@ -24,6 +26,8 @@ var MonitorW struct {
 var SetUp struct {
 	Completed bool `json:"completed"`
 }
+
+var mw io.Writer
 
 func init() {
 	err := playwright.Install()
@@ -74,13 +78,32 @@ func init() {
 
 	}
 
+	_, err = os.Stat("log.txt")
+	if os.IsNotExist(err) {
+		file, err = os.Create("log.txt")
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	file, err = os.OpenFile("log.txt", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	mw = io.MultiWriter(os.Stdout, file)
+	log.SetOutput(mw)
+	log.Println("This is a log message")
+
 }
 
 func main() {
 
 	proxies := Monitor.ProxyLoad()
+	log.Println("Proxies loaded")
+	time.Sleep(5 * time.Minute)
 
 	go Monitor.TaskInit(proxies, MonitorW.Webhook)
+	log.Println("started monitor task")
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)

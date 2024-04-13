@@ -2,12 +2,62 @@ package Monitor
 
 import (
 	"encoding/csv"
-	"fmt"
 	"io"
 	"log"
 	"os"
 	"strings"
+	"time"
+
+	"github.com/playwright-community/playwright-go"
 )
+
+func IdFound(string2 string, page playwright.Page) bool {
+	locator := page.Locator(string2)
+	exists, err := locator.Count()
+	if err != nil {
+		log.Panicf("could not count element: at log in here %v", err)
+	}
+	if exists > 0 {
+		return true
+
+	} else {
+		return false
+	}
+
+}
+
+func TextFound(string2 string, page playwright.Page) bool {
+	bodyText, err := page.Locator("body").InnerText()
+	if err != nil {
+		log.Panicf("could not get inner text: %v", err)
+	}
+	if strings.Contains(bodyText, "The event has ended") {
+		return true
+	} else {
+		return false
+	}
+
+}
+
+func CheckForTickets(string2 string, page playwright.Page) bool {
+	if _, err := page.Goto(string2); err != nil {
+		log.Panicf("could not goto: %v", err)
+	}
+	ClickPW(".btn.btn-large.btn-find-seats", page)
+
+	if TextFound("No Tickets found", page) == false {
+		//send webhook tickets are available
+		return true
+	} else {
+		return false
+	}
+}
+
+func ClickPW(string string, page playwright.Page) {
+	locator := page.Locator(string)
+	AssertErrorToNil("Failed to click on button", locator.Click())
+	time.Sleep(800)
+}
 
 func ProxyLoad() []ProxyStruct {
 	var returnPS []ProxyStruct
@@ -20,7 +70,7 @@ func ProxyLoad() []ProxyStruct {
 	csvReader := csv.NewReader(f)
 	for i := 0; true; i++ {
 		if i == 0 {
-			fmt.Println("Loading proxies")
+			log.Println("Loading proxies")
 			_, err := csvReader.Read()
 			if err != nil {
 				log.Fatalf("failed to open csv - err: %v", err)
