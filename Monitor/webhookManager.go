@@ -21,6 +21,7 @@ type Field struct {
 }
 
 func webhookPageCaptchaStuck(Proxy string, wbKey string) {
+
 	var title = "Task stuck in captcha solving"
 	var description = "proxy is stuck in captcha solving" + Proxy
 	payloadData := struct {
@@ -48,10 +49,10 @@ func webhookPageCaptchaStuck(Proxy string, wbKey string) {
 	WebhookSend(payloadData, wbKey)
 }
 
-func WebhookPageLive(pageURL string, wbKey string) {
-
-	var title = "Ticketera queueIT down"
-	var description = "Tickets posibly live here : " + pageURL
+func WebhookTicketsLive(pageURL string, wbKey string) {
+	log.Println("Tickets found, sending webhook")
+	var title = "THERE ARE TICKETS AVAILABLE FOR 2"
+	var description = "Tickets live here : " + pageURL
 
 	payloadData := struct {
 		Content   interface{} `json:"content"`
@@ -66,7 +67,7 @@ func WebhookPageLive(pageURL string, wbKey string) {
 				Color: 5814783,
 				Fields: []Field{
 					{
-						Name:  "LINK BELOW",
+						Name:  "Task",
 						Value: description,
 					},
 				},
@@ -124,5 +125,8 @@ func WebhookSend(pld interface{}, wbKey string) {
 		fmt.Println("Coudln't send request")
 	}
 
-	defer resp.Body.Close()
+	err = resp.Body.Close()
+	if err != nil {
+		fmt.Println("Couldn't close body")
+	}
 }

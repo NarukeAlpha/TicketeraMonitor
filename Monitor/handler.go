@@ -26,17 +26,36 @@ func IdFound(string2 string, page playwright.Page) bool {
 
 }
 
-func TextFound(string2 string, page playwright.Page) bool {
-	bodyText, err := page.Locator("body").InnerText()
+func TextBodyFound(string2 string, page playwright.Page) bool {
+	bodyText, err := page.Locator(string2).InnerText()
 	if err != nil {
 		log.Panicf("could not get inner text: %v", err)
 	}
-	if strings.Contains(bodyText, "The event has ended") {
+	if strings.Contains(bodyText, string2) {
 		return true
 	} else {
 		return false
 	}
 
+}
+
+func TextModalFound(string string, page playwright.Page) bool {
+	modalText, err := page.Locator(string).AllTextContents()
+	if err != nil {
+		log.Panicf("could not get inner text: %v", err)
+	}
+	for _, text := range modalText {
+		if text == string {
+			return true
+
+		}
+	}
+	return false
+}
+func ClickPW(string string, page playwright.Page) {
+	locator := page.Locator(string)
+	AssertErrorToNil("Failed to click on button", locator.Click())
+	time.Sleep(800)
 }
 
 func CheckForTickets(string2 string, page playwright.Page) bool {
@@ -44,19 +63,7 @@ func CheckForTickets(string2 string, page playwright.Page) bool {
 		log.Panicf("could not goto: %v", err)
 	}
 	ClickPW(".btn.btn-large.btn-find-seats", page)
-
-	if TextFound("No Tickets found", page) == false {
-		//send webhook tickets are available
-		return true
-	} else {
-		return false
-	}
-}
-
-func ClickPW(string string, page playwright.Page) {
-	locator := page.Locator(string)
-	AssertErrorToNil("Failed to click on button", locator.Click())
-	time.Sleep(800)
+	return TextModalFound("NO TICKETS FOUND", page)
 }
 
 func ProxyLoad() []ProxyStruct {
@@ -66,7 +73,6 @@ func ProxyLoad() []ProxyStruct {
 	if err != nil {
 		log.Fatalf("couldn't open - err: %v", err)
 	}
-	defer f.Close()
 	csvReader := csv.NewReader(f)
 	for i := 0; true; i++ {
 		if i == 0 {
@@ -84,7 +90,7 @@ func ProxyLoad() []ProxyStruct {
 				log.Fatalf("CSV reader failed - err : %v", err)
 			}
 			split := strings.Split(rec[0], ":")
-			srv := (split[0] + ":" + split[1])
+			srv := split[0] + ":" + split[1]
 			usr := split[2]
 			pss := split[3]
 
@@ -97,6 +103,10 @@ func ProxyLoad() []ProxyStruct {
 
 		}
 
+	}
+	err = f.Close()
+	if err != nil {
+		log.Fatalf("failed to close file - err: %v", err)
 	}
 	return returnPS
 }

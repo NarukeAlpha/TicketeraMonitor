@@ -7,17 +7,10 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"time"
 
 	"TMv1/Monitor"
 	"github.com/playwright-community/playwright-go"
 )
-
-type ProxyStruct struct {
-	ip  string
-	usr string
-	pw  string
-}
 
 var MonitorW struct {
 	Webhook string `json:"webhook"`
@@ -35,6 +28,18 @@ func init() {
 	// load data into variables
 	// check if data is valid
 	// if data is not valid, start a setup process
+	_, err = os.Stat("data.json")
+	if os.IsNotExist(err) {
+		_, err = os.Create("data.json")
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	_, err = os.Stat("ProxyList.csv")
+	if os.IsNotExist(err) {
+		log.Fatalln("PoxyList.csv not found, please provide a csv file named ProxyList in the same directory as the exe")
+
+	}
 	file, err := os.Open("data.json")
 	if err != nil {
 		log.Panicf("Error opening data.json: %v", err)
@@ -59,7 +64,10 @@ func init() {
 		// Ask for Monitor configuration value
 		fmt.Println("\nEnter Monitor configuration:")
 		fmt.Print("Webhook: ")
-		fmt.Scanln(&MonitorW.Webhook)
+		_, err := fmt.Scanln(&MonitorW.Webhook)
+		if err != nil {
+			log.Panicf("Error scanning input: %v", err)
+		}
 
 		SetUp.Completed = true
 		file, err = os.OpenFile("data.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
@@ -101,8 +109,6 @@ func main() {
 
 	proxies := Monitor.ProxyLoad()
 	log.Println("Proxies loaded")
-	time.Sleep(5 * time.Minute)
-
 	go Monitor.TaskInit(proxies, MonitorW.Webhook)
 	log.Println("started monitor task")
 
