@@ -41,9 +41,9 @@ func PlaywrightInit(proxy ProxyStruct, pw *playwright.Playwright) (playwright.Br
 		DeviceScaleFactor: playwright.Float(device.DeviceScaleFactor),
 		IsMobile:          playwright.Bool(device.IsMobile),
 		HasTouch:          playwright.Bool(device.HasTouch),
-		Headless:          playwright.Bool(false),
-		ColorScheme:       playwright.ColorSchemeDark,
-		Proxy:             &pwProxyStrct,
+		//	Headless:          playwright.Bool(false),
+		ColorScheme: playwright.ColorSchemeDark,
+		Proxy:       &pwProxyStrct,
 		IgnoreDefaultArgs: []string{
 			"--enable-automation",
 		},
@@ -93,6 +93,7 @@ func Task(proxy ProxyStruct, wbKey string, errch chan error) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Printf("Recovered from panic: %v assuming bad proxy", err)
+			time.Sleep(15 * time.Second)
 			err := errors.New("recovered from panic")
 			errch <- err
 
